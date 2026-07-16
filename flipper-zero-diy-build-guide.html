@@ -1,0 +1,645 @@
+<title>DIY Flipper Zero — Visual Build Manual</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #ECEFEC;
+    --surface: #F8FAF7;
+    --surface-2: #F0F3EF;
+    --ink: #16201B;
+    --ink-soft: #48564E;
+    --ink-faint: #84938A;
+    --line: #D6DCD4;
+    --line-strong: #C2CABF;
+    --accent: #9A6712;
+    --accent-ink: #7C520C;
+    --accent-soft: #F2E7CE;
+    --danger: #B23A24;
+    --danger-soft: #F6E1DB;
+    --good: #2E7D4F;
+    --good-soft: #DCEEE2;
+    --brand: #E85D0A;
+    --shadow: 0 1px 2px rgba(20,32,26,.06), 0 8px 24px rgba(20,32,26,.05);
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --maxw: 60rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0E1512;
+      --surface: #141D18;
+      --surface-2: #182420;
+      --ink: #E8EEE8;
+      --ink-soft: #9AA99F;
+      --ink-faint: #6B7A71;
+      --line: #253229;
+      --line-strong: #33443A;
+      --accent: #D9A94A;
+      --accent-ink: #E7C079;
+      --accent-soft: #2A2417;
+      --danger: #E9694E;
+      --danger-soft: #2C1A15;
+      --good: #4FB37A;
+      --good-soft: #142B1F;
+      --brand: #FF7A1A;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #ECEFEC; --surface: #F8FAF7; --surface-2: #F0F3EF; --ink: #16201B;
+    --ink-soft: #48564E; --ink-faint: #84938A; --line: #D6DCD4; --line-strong: #C2CABF;
+    --accent: #9A6712; --accent-ink: #7C520C; --accent-soft: #F2E7CE; --danger: #B23A24;
+    --danger-soft: #F6E1DB; --good: #2E7D4F; --good-soft: #DCEEE2; --brand: #E85D0A;
+    --shadow: 0 1px 2px rgba(20,32,26,.06), 0 8px 24px rgba(20,32,26,.05);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E1512; --surface: #141D18; --surface-2: #182420; --ink: #E8EEE8;
+    --ink-soft: #9AA99F; --ink-faint: #6B7A71; --line: #253229; --line-strong: #33443A;
+    --accent: #D9A94A; --accent-ink: #E7C079; --accent-soft: #2A2417; --danger: #E9694E;
+    --danger-soft: #2C1A15; --good: #4FB37A; --good-soft: #142B1F; --brand: #FF7A1A;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.6;
+    -webkit-font-smoothing: antialiased; font-size: 17px;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 1.25rem; }
+
+  /* progress rail */
+  .progress { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .progress__inner { max-width: var(--maxw); margin: 0 auto; padding: .6rem 1.25rem; display: flex; align-items: center; gap: .9rem; }
+  .progress__bar { flex: 1; height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .progress__fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--brand)); border-radius: 99px; transition: width .35s ease; }
+  .progress__label { font-family: var(--mono); font-size: .72rem; letter-spacing: .04em; color: var(--ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .theme-btn { font-family: var(--mono); font-size: .7rem; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 7px; padding: .35rem .55rem; cursor: pointer; }
+  .theme-btn:hover { color: var(--ink); border-color: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { .progress__fill { transition: none; } }
+
+  /* header */
+  header.hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+  .hero__traces { position: absolute; inset: 0; opacity: .5; pointer-events: none; }
+  .hero__inner { position: relative; padding: 3.2rem 0 2.4rem; }
+  .eyebrow { font-family: var(--mono); font-size: .74rem; letter-spacing: .22em; text-transform: uppercase; color: var(--accent-ink); margin: 0 0 1rem; display: flex; gap: .6rem; align-items: center; }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 99px; background: var(--brand); }
+  h1 { font-family: var(--mono); font-weight: 700; font-size: clamp(2rem, 6vw, 3.4rem); line-height: 1.02; letter-spacing: -.01em; margin: 0 0 1rem; text-wrap: balance; }
+  h1 .glyph { color: var(--brand); }
+  .lede { font-size: 1.15rem; color: var(--ink-soft); max-width: 42ch; margin: 0 0 2rem; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: .75rem; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: .9rem 1rem; box-shadow: var(--shadow); }
+  .stat__k { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 .35rem; }
+  .stat__v { font-size: 1.28rem; font-weight: 700; font-family: var(--mono); color: var(--ink); }
+  .stat__v small { font-size: .8rem; font-weight: 400; color: var(--ink-soft); }
+
+  /* sections */
+  main { padding: 1rem 0 4rem; }
+  section { padding: 2.6rem 0; border-bottom: 1px solid var(--line); }
+  section:last-child { border-bottom: 0; }
+  .snum { font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; color: var(--accent-ink); text-transform: uppercase; margin: 0 0 .5rem; }
+  h2 { font-family: var(--mono); font-size: clamp(1.4rem,3.4vw,1.9rem); font-weight: 700; letter-spacing: -.01em; margin: 0 0 1rem; text-wrap: balance; }
+  h3 { font-family: var(--sans); font-size: 1.12rem; font-weight: 700; margin: 1.8rem 0 .6rem; }
+  p { margin: 0 0 1rem; }
+  a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+  a:hover { color: var(--brand); }
+  strong { color: var(--ink); }
+
+  /* callouts */
+  .callout { border-radius: 12px; padding: 1.1rem 1.2rem; margin: 1.2rem 0; border: 1px solid; display: grid; grid-template-columns: auto 1fr; gap: .9rem; }
+  .callout__icon { font-size: 1.15rem; line-height: 1.4; }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout.danger { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 45%, transparent); }
+  .callout.danger .callout__title { color: var(--danger); }
+  .callout.tip { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+  .callout.tip .callout__title { color: var(--accent-ink); }
+  .callout.good { background: var(--good-soft); border-color: color-mix(in srgb, var(--good) 40%, transparent); }
+  .callout.good .callout__title { color: var(--good); }
+  .callout__title { font-family: var(--mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; margin: 0 0 .35rem; }
+
+  /* architecture diagram */
+  .arch { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1.6rem 1.2rem; box-shadow: var(--shadow); overflow-x: auto; }
+  .mcu { max-width: 320px; margin: 0 auto 1.4rem; text-align: center; background: var(--ink); color: var(--bg); border-radius: 12px; padding: 1rem; }
+  .mcu .mcu__name { font-family: var(--mono); font-weight: 700; font-size: 1.15rem; }
+  .mcu .mcu__sub { font-family: var(--mono); font-size: .72rem; opacity: .7; letter-spacing: .04em; margin-top: .2rem; }
+  .bus { margin: 1.2rem 0; }
+  .bus__label { font-family: var(--mono); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-ink); text-align: center; margin-bottom: .7rem; position: relative; }
+  .bus__label span { background: var(--surface); padding: 0 .6rem; position: relative; z-index: 1; }
+  .bus__label::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background: var(--line-strong); }
+  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: .6rem; min-width: 480px; }
+  .chip { background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 10px; padding: .7rem .6rem; text-align: center; }
+  .chip__n { font-family: var(--mono); font-weight: 700; font-size: .82rem; }
+  .chip__d { font-size: .74rem; color: var(--ink-soft); margin-top: .15rem; }
+  .chip.hard { border-color: color-mix(in srgb, var(--danger) 50%, var(--line-strong)); }
+  .chip.hard .chip__n::after { content:" ⚠"; color: var(--danger); }
+
+  /* tables */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); margin: 1.2rem 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; min-width: 520px; background: var(--surface); }
+  th, td { text-align: left; padding: .7rem .85rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { font-family: var(--mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); background: var(--surface-2); position: sticky; top: 0; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.pin, td.price { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.pin b { color: var(--accent-ink); }
+  .tag { display: inline-block; font-family: var(--mono); font-size: .66rem; letter-spacing: .04em; padding: .12rem .45rem; border-radius: 5px; background: var(--surface-2); border: 1px solid var(--line-strong); color: var(--ink-soft); }
+  .tag.req { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, var(--line-strong)); }
+  .tag.opt { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 40%, var(--line-strong)); }
+  .tag.adv { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, var(--line-strong)); }
+
+  /* stage / step cards */
+  .stage { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin: 1.1rem 0; box-shadow: var(--shadow); overflow: hidden; }
+  .stage__head { display: flex; align-items: center; gap: .8rem; padding: 1rem 1.2rem; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+  .stage__badge { font-family: var(--mono); font-weight: 700; font-size: .8rem; width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: 8px; background: var(--ink); color: var(--bg); flex: none; }
+  .stage__title { font-family: var(--mono); font-weight: 700; font-size: 1rem; }
+  .stage__meta { margin-left: auto; font-size: .78rem; color: var(--ink-soft); font-family: var(--mono); }
+  .steps { list-style: none; margin: 0; padding: .5rem .4rem; }
+  .step { display: grid; grid-template-columns: auto 1fr; gap: .8rem; padding: .7rem .8rem; border-radius: 10px; align-items: start; }
+  .step:hover { background: var(--surface-2); }
+  .step input { appearance: none; -webkit-appearance: none; width: 1.35rem; height: 1.35rem; border: 2px solid var(--line-strong); border-radius: 6px; cursor: pointer; margin: .1rem 0 0; flex: none; position: relative; background: var(--surface); transition: background .15s, border-color .15s; }
+  .step input:checked { background: var(--good); border-color: var(--good); }
+  .step input:checked::after { content:"✓"; color: #fff; position: absolute; inset: 0; display: grid; place-items: center; font-size: .9rem; font-weight: 700; }
+  .step input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .step__txt { cursor: pointer; }
+  .step input:checked + .step__txt { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--line-strong); }
+  .step__txt code, p code, td code, li code { font-family: var(--mono); font-size: .86em; background: var(--surface-2); border: 1px solid var(--line); border-radius: 5px; padding: .05em .35em; }
+
+  ul.plain { padding-left: 1.1rem; }
+  ul.plain li { margin: .35rem 0; }
+
+  /* prompt box */
+  .prompt { background: var(--ink); color: var(--bg); border-radius: 14px; padding: 1.2rem 1.3rem; position: relative; box-shadow: var(--shadow); }
+  .prompt__label { font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; opacity: .65; margin-bottom: .7rem; }
+  .prompt__text { font-family: var(--mono); font-size: .84rem; line-height: 1.65; white-space: pre-wrap; margin: 0; }
+  .copy-btn { position: absolute; top: 1rem; right: 1rem; font-family: var(--mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; background: color-mix(in srgb, var(--brand) 90%, black); color: #fff; border: 0; border-radius: 7px; padding: .4rem .7rem; cursor: pointer; }
+  .copy-btn:hover { background: var(--brand); }
+  .copy-btn.done { background: var(--good); }
+
+  .steplist { counter-reset: fs; list-style: none; padding: 0; margin: 1rem 0; }
+  .steplist li { counter-increment: fs; padding: .55rem 0 .55rem 2.4rem; position: relative; border-bottom: 1px dashed var(--line); }
+  .steplist li:last-child { border-bottom: 0; }
+  .steplist li::before { content: counter(fs); position: absolute; left: 0; top: .5rem; font-family: var(--mono); font-weight: 700; font-size: .78rem; width: 1.7rem; height: 1.7rem; display: grid; place-items: center; border-radius: 7px; background: var(--accent-soft); color: var(--accent-ink); }
+
+  footer { padding: 2.4rem 0 3rem; color: var(--ink-soft); font-size: .88rem; }
+  .links { display: grid; gap: .4rem; margin: .8rem 0; }
+  .foot-note { font-family: var(--mono); font-size: .74rem; color: var(--ink-faint); border-top: 1px solid var(--line); padding-top: 1.2rem; margin-top: 1.4rem; }
+
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .callout { grid-template-columns: 1fr; }
+    .callout__icon { display: none; }
+  }
+</style>
+
+<div class="progress">
+  <div class="progress__inner">
+    <span class="progress__label" id="pct">BUILD PROGRESS · 0%</span>
+    <div class="progress__bar"><div class="progress__fill" id="fill"></div></div>
+    <button class="theme-btn" id="themeToggle" type="button" aria-label="Toggle theme">◐ Theme</button>
+  </div>
+</div>
+
+<header class="hero">
+  <svg class="hero__traces" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1200 320">
+    <g fill="none" stroke="var(--line-strong)" stroke-width="1.5">
+      <path d="M0 60 H240 L280 100 H520 L560 60 H900"/>
+      <path d="M0 140 H160 L200 180 H600"/>
+      <path d="M1200 90 H980 L940 130 H700 L660 90 H460"/>
+      <path d="M1200 220 H900 L860 180 H540"/>
+      <path d="M120 320 V220 L160 180 V80"/>
+      <path d="M1040 320 V200 L1000 160 V60"/>
+    </g>
+    <g fill="var(--accent)">
+      <circle cx="240" cy="60" r="4"/><circle cx="560" cy="60" r="4"/><circle cx="160" cy="140" r="4"/>
+      <circle cx="980" cy="90" r="4"/><circle cx="700" cy="130" r="4"/><circle cx="900" cy="220" r="4"/>
+      <circle cx="160" cy="180" r="4"/><circle cx="1000" cy="160" r="4"/>
+    </g>
+  </svg>
+  <div class="wrap hero__inner">
+    <p class="eyebrow"><span class="dot"></span> DIY Build Manual · Rev 1 · True-Clone Path</p>
+    <h1>Build Your Own <span class="glyph">Flipper Zero</span></h1>
+    <p class="lede">A real Flipper-compatible multi-tool from off-the-shelf modules — same STM32WB55 brain, same radios, real firmware. Solder it, flash it, learn embedded systems.</p>
+    <div class="stats">
+      <div class="stat"><p class="stat__k">Difficulty</p><p class="stat__v">Hard <small>· solder + flash</small></p></div>
+      <div class="stat"><p class="stat__k">Parts cost</p><p class="stat__v">$70–120</p></div>
+      <div class="stat"><p class="stat__k">Time</p><p class="stat__v">2–3 <small>weekends</small></p></div>
+      <div class="stat"><p class="stat__k">Closeness</p><p class="stat__v">Real FW</p></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section id="safety">
+    <p class="snum">00 · Before you spend a dollar</p>
+    <h2>Expectations &amp; the law</h2>
+    <p>You're building a handheld multi-tool: <strong>Sub-GHz radio</strong>, <strong>infrared</strong>, <strong>iButton</strong>, <strong>NFC</strong>, <strong>125&nbsp;kHz RFID</strong>, <strong>GPIO / BadUSB</strong>, plus screen and D-pad. Everything except the two radios below is very achievable.</p>
+    <div class="callout tip">
+      <div class="callout__icon">🎯</div>
+      <div>
+        <p class="callout__title">Reality check</p>
+        <p>Sub-GHz, IR, iButton, GPIO/BadUSB, display and buttons will work well. <strong>NFC (13.56&nbsp;MHz) and especially 125&nbsp;kHz RFID are the hard parts</strong> — the real Flipper uses a custom analog front-end that cheap modules don't fully replicate. Treat 125&nbsp;kHz as a "version 2" goal and don't let it block the rest of the build.</p>
+      </div>
+    </div>
+    <div class="callout danger">
+      <div class="callout__icon">⚖️</div>
+      <div>
+        <p class="callout__title">Legal &amp; safety — actually read this</p>
+        <p><strong>Only transmit to or test hardware and networks you own or have written permission for.</strong> Replaying someone's remote, cloning cards you don't own, or transmitting on licensed bands can be a crime. Radio spectrum is regulated (FCC and equivalents).</p>
+        <p>Li-ion cells are dangerous shorted or mischarged — use a <strong>protected cell</strong> and a proper charger. Soldering tips hit 350&nbsp;°C: ventilate and don't breathe flux fumes.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="arch">
+    <p class="snum">01 · Understand before you buy</p>
+    <h2>How a Flipper is wired</h2>
+    <p>One <strong>brain</strong> (the MCU) talks to several modules over two shared buses. <strong>SPI</strong> is a fast bus the big peripherals share — three common wires (SCK / MOSI / MISO) plus a unique <strong>Chip-Select</strong> per device. Single-pin extras (IR, speaker, iButton) just toggle one GPIO each.</p>
+    <div class="arch">
+      <div class="mcu">
+        <div class="mcu__name">STM32WB55</div>
+        <div class="mcu__sub">ARM Cortex-M4 · the brain</div>
+      </div>
+      <div class="bus">
+        <div class="bus__label"><span>Shared SPI bus — SCK PB3 · MOSI PB5 · MISO PB4</span></div>
+        <div class="chips">
+          <div class="chip"><div class="chip__n">CC1101</div><div class="chip__d">Sub-GHz radio · CS PA15</div></div>
+          <div class="chip"><div class="chip__n">SPI LCD</div><div class="chip__d">128×64 · CS PA3</div></div>
+          <div class="chip"><div class="chip__n">microSD</div><div class="chip__d">storage · CS PA10</div></div>
+          <div class="chip hard"><div class="chip__n">ST25R3916</div><div class="chip__d">NFC 13.56 · CS PE4</div></div>
+        </div>
+      </div>
+      <div class="bus">
+        <div class="bus__label"><span>Single-pin GPIO peripherals</span></div>
+        <div class="chips">
+          <div class="chip"><div class="chip__n">IR RX + TX</div><div class="chip__d">learn &amp; blast remotes</div></div>
+          <div class="chip"><div class="chip__n">Piezo</div><div class="chip__d">tones · PWM PB8</div></div>
+          <div class="chip"><div class="chip__n">iButton</div><div class="chip__d">1-Wire keys</div></div>
+          <div class="chip hard"><div class="chip__n">125kHz LF</div><div class="chip__d">experimental</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="callout danger">
+      <div class="callout__icon">📌</div>
+      <div>
+        <p class="callout__title">The one rule of this build</p>
+        <p>Wiring must match the exact pin map your <strong>firmware fork</strong> expects — the pins are hard-coded. You don't pick pins freely; you copy the firmware's map. That's why firmware choice comes before final wiring.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="bom">
+    <p class="snum">02 · Shopping list</p>
+    <h2>Bill of materials</h2>
+    <p>This follows the <strong>FCFZ / "Cheap DIY Flipper"</strong> hardware set (runs real Momentum firmware). Buy 2× of the cheap fragile bits (CC1101, LCD, shift register) — you'll cook one while learning.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Part</th><th>Spec</th><th></th><th>~Price</th></tr></thead>
+        <tbody>
+          <tr><td><strong>STM32WB55 board</strong></td><td>WeAct Studio STM32WB55CGU6</td><td><span class="tag req">core</span></td><td class="price">$12–18</td></tr>
+          <tr><td><strong>CC1101 module</strong></td><td>Sub-GHz radio, 433&nbsp;MHz + antenna</td><td><span class="tag req">core</span></td><td class="price">$3–6</td></tr>
+          <tr><td><strong>SPI LCD</strong></td><td>128×64, ST7565/ST756x, 8-pin</td><td><span class="tag req">core</span></td><td class="price">$4–8</td></tr>
+          <tr><td><strong>microSD module + card</strong></td><td>SPI breakout + 8–32&nbsp;GB</td><td><span class="tag req">core</span></td><td class="price">$8</td></tr>
+          <tr><td><strong>Tactile buttons ×6</strong></td><td>Up/Down/Left/Right/OK/Back</td><td><span class="tag req">core</span></td><td class="price">$2</td></tr>
+          <tr><td><strong>SN74HC165N</strong></td><td>PISO shift register for buttons</td><td><span class="tag opt">recommended</span></td><td class="price">$1</td></tr>
+          <tr><td><strong>Perfboard + headers + wire</strong></td><td>prototyping</td><td><span class="tag req">core</span></td><td class="price">$8</td></tr>
+          <tr><td><strong>Li-ion cell (protected)</strong></td><td>3.7&nbsp;V 1000–2000&nbsp;mAh + BMS</td><td><span class="tag req">core</span></td><td class="price">$6–10</td></tr>
+          <tr><td><strong>TP4056 charger</strong></td><td>USB-C, DW01-protected version</td><td><span class="tag req">core</span></td><td class="price">$2</td></tr>
+          <tr><td><strong>ST25R3916 NFC</strong></td><td>13.56&nbsp;MHz, same chip as real Flipper</td><td><span class="tag adv">advanced</span></td><td class="price">$12–20</td></tr>
+          <tr><td><strong>TSOP38238</strong></td><td>IR receiver / learner</td><td><span class="tag opt">add-on</span></td><td class="price">$1</td></tr>
+          <tr><td><strong>IR LED + 2N2222 + resistor</strong></td><td>IR transmitter (transistor-driven)</td><td><span class="tag opt">add-on</span></td><td class="price">$1</td></tr>
+          <tr><td><strong>Passive piezo buzzer</strong></td><td>tones via PWM</td><td><span class="tag opt">add-on</span></td><td class="price">$1</td></tr>
+          <tr><td><strong>125&nbsp;kHz LF antenna + front-end</strong></td><td>fussy analog stage</td><td><span class="tag adv">v2</span></td><td class="price">$5+</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Tools</h3>
+    <ul class="plain">
+      <li>Temp-controlled soldering iron, solder, flux, desoldering braid, tip cleaner.</li>
+      <li><strong>Multimeter</strong> (continuity + voltage) — essential for debugging.</li>
+      <li>Fine tweezers, flush cutters, helping-hands / PCB holder.</li>
+      <li><strong>Data-capable</strong> USB cable (many cheap ones are charge-only!).</li>
+      <li>A Windows PC makes flashing smoothest (STM32CubeProgrammer + Zadig).</li>
+      <li>PLA or PETG filament for the case (you have a printer 🎉).</li>
+    </ul>
+  </section>
+
+  <section id="order">
+    <p class="snum">03 · The smart way</p>
+    <h2>Build order</h2>
+    <p>Build so every stage leaves you with a <strong>working, testable device</strong> — this is the habit that separates finished projects from drawer projects.</p>
+    <ol class="steplist">
+      <li><strong>Flash &amp; boot the bare MCU</strong> — prove board + cable + drivers before wiring anything.</li>
+      <li><strong>Screen + buttons</strong> — now you have visual feedback for everything after.</li>
+      <li><strong>SD card, then CC1101</strong> — the most satisfying working radio.</li>
+      <li><strong>IR, speaker, iButton</strong> — easy single-pin wins.</li>
+      <li><strong>NFC, then 125&nbsp;kHz</strong> — the hard ones, last.</li>
+      <li><strong>Battery + case</strong> — once the electronics are proven on the bench.</li>
+    </ol>
+  </section>
+
+  <section id="firmware">
+    <p class="snum">04 · Decide before wiring</p>
+    <h2>Firmware &amp; pin map</h2>
+    <p>The true-clone target is <strong>Momentum (FCFZ fork)</strong> — real Flipper UI + app ecosystem. Get the firmware <em>and its wiring diagrams</em> from the source repos, and wire directly from those diagrams. Where this table and a repo diagram disagree, the repo diagram for your firmware version wins.</p>
+    <h3>Shared SPI bus</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Signal</th><th>STM32WB55 pin</th></tr></thead>
+        <tbody>
+          <tr><td>SPI SCK (clock)</td><td class="pin"><b>PB3</b></td></tr>
+          <tr><td>SPI MOSI (data out)</td><td class="pin"><b>PB5</b></td></tr>
+          <tr><td>SPI MISO (data in)</td><td class="pin"><b>PB4</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Chip-Select — one unique pin per SPI device</h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Device</th><th>CS pin</th><th>Extra</th></tr></thead>
+        <tbody>
+          <tr><td>Display (LCD)</td><td class="pin"><b>PA3</b></td><td>+ DC/A0, RST, backlight</td></tr>
+          <tr><td>CC1101 (Sub-GHz)</td><td class="pin"><b>PA15</b></td><td>GDO0 → <b>PA1</b></td></tr>
+          <tr><td>microSD</td><td class="pin"><b>PA10</b></td><td>—</td></tr>
+          <tr><td>NFC (ST25R3916)</td><td class="pin"><b>PE4</b></td><td>advanced</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Single-pin peripherals <span style="font-weight:400;color:var(--ink-soft);font-size:.85rem;">(confirm in firmware)</span></h3>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Function</th><th>Pin</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>IR receive (TSOP out)</td><td class="pin">PA0*</td><td>*or per fork</td></tr>
+          <tr><td>IR transmit</td><td class="pin">PA8*</td><td>drive via transistor, never direct</td></tr>
+          <tr><td>Speaker (piezo)</td><td class="pin">PB8</td><td>PWM</td></tr>
+          <tr><td>UART debug TX / RX</td><td class="pin">PB6 / PB7</td><td>serial console</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout tip">
+      <div class="callout__icon">🔗</div>
+      <div>
+        <p class="callout__title">Source repos — save their wiring diagrams</p>
+        <p><a href="https://github.com/GthiN89/FuckingCheapFlipperZero-DIY-Flipper-zero-The-real-on">GthiN89 · FCFZ "the real one"</a> (off-the-shelf modules, Momentum) and <a href="https://github.com/Magnowz/Flipper-Diy">Magnowz · Flipper-Diy</a> (detailed wiring diagrams for SD, buttons ±shift-register, 8/14-pin display, CC1101 + flashing).</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="assembly">
+    <p class="snum">05 · Hands on the iron</p>
+    <h2>Assembly — check off each step</h2>
+    <p>Test loose on the bench first; only solder to perfboard once a subsystem responds. After each stage, run a <strong>continuity test</strong> — five minutes of beeping saves hours of "why is it dead."</p>
+
+    <div class="stage">
+      <div class="stage__head"><span class="stage__badge">A</span><span class="stage__title">Power up the bare MCU</span><span class="stage__meta">foundation</span></div>
+      <ul class="steps">
+        <li class="step"><input type="checkbox" id="a1"><label class="step__txt" for="a1">Inspect the WeAct board; locate <code>BOOT0</code>, <code>3V3</code>, <code>GND</code>, <code>PB3/PB4/PB5</code> and the CS pins on the silkscreen.</label></li>
+        <li class="step"><input type="checkbox" id="a2"><label class="step__txt" for="a2">Solder header pins if not pre-soldered — heat pad + pin ~1–2&nbsp;s, feed a little solder, aim for a shiny cone.</label></li>
+        <li class="step"><input type="checkbox" id="a3"><label class="step__txt" for="a3">Connect a <strong>data-capable</strong> USB cable; confirm the power LED lights and the PC enumerates the device.</label></li>
+        <li class="step"><input type="checkbox" id="a4"><label class="step__txt" for="a4">Install <strong>STM32CubeProgrammer</strong>, <strong>qFlipper</strong>, and (Windows) <strong>Zadig</strong>.</label></li>
+        <li class="step"><input type="checkbox" id="a5"><label class="step__txt" for="a5"><strong>Prove it:</strong> enter bootloader (hold BOOT0 while plugging in) and confirm STM32CubeProgrammer connects over USB/DFU and reads the chip ID. Don't proceed until this works.</label></li>
+      </ul>
+    </div>
+
+    <div class="stage">
+      <div class="stage__head"><span class="stage__badge">B</span><span class="stage__title">Display + buttons</span><span class="stage__meta">your eyes &amp; hands</span></div>
+      <ul class="steps">
+        <li class="step"><input type="checkbox" id="b1"><label class="step__txt" for="b1">Wire the LCD: VCC→3V3, GND→GND, SCK→PB3, MOSI→PB5, CS→PA3, plus DC/A0, RST, backlight per the repo's 8-pin diagram.</label></li>
+        <li class="step"><input type="checkbox" id="b2"><label class="step__txt" for="b2">Wire buttons into the <strong>SN74HC165N</strong> per the shift-register diagram (recommended), or one-per-GPIO to GND.</label></li>
+        <li class="step"><input type="checkbox" id="b3"><label class="step__txt" for="b3">Keep a wiring log on paper — write down every wire as you place it (<code>PB3 → LCD SCK</code>). It's gold when debugging.</label></li>
+      </ul>
+    </div>
+
+    <div class="stage">
+      <div class="stage__head"><span class="stage__badge">C</span><span class="stage__title">SD card + Sub-GHz radio</span><span class="stage__meta">the fun part</span></div>
+      <ul class="steps">
+        <li class="step"><input type="checkbox" id="c1"><label class="step__txt" for="c1">Wire microSD: VCC→3V3, GND→GND, SCK→PB3, MOSI→PB5, MISO→PB4, CS→PA10.</label></li>
+        <li class="step"><input type="checkbox" id="c2"><label class="step__txt" for="c2">Wire CC1101 at <strong>3.3&nbsp;V (not 5&nbsp;V!)</strong>: SCK→PB3, MOSI→PB5, MISO→PB4, CS→PA15, GDO0→PA1. Attach the antenna before any TX.</label></li>
+      </ul>
+    </div>
+
+    <div class="stage">
+      <div class="stage__head"><span class="stage__badge">D</span><span class="stage__title">IR · speaker · iButton</span><span class="stage__meta">single-pin wins</span></div>
+      <ul class="steps">
+        <li class="step"><input type="checkbox" id="d1"><label class="step__txt" for="d1">IR receiver (TSOP38238): OUT→IR-RX pin, VCC→3V3, GND→GND. Demodulation is built in.</label></li>
+        <li class="step"><input type="checkbox" id="d2"><label class="step__txt" for="d2">IR transmitter: IR-TX pin → 220&nbsp;Ω → NPN base; LED anode → 3V3 via resistor; cathode → collector; emitter → GND. <strong>Never</strong> drive the LED straight off a pin.</label></li>
+        <li class="step"><input type="checkbox" id="d3"><label class="step__txt" for="d3">Piezo: one leg → PB8, other → GND. iButton: single contact pad + 1-Wire pin with pull-up per diagram.</label></li>
+      </ul>
+    </div>
+
+    <div class="stage">
+      <div class="stage__head"><span class="stage__badge">E</span><span class="stage__title">Advanced radios</span><span class="stage__meta">after basics boot</span></div>
+      <ul class="steps">
+        <li class="step"><input type="checkbox" id="e1"><label class="step__txt" for="e1">NFC (ST25R3916): wire to SPI bus with CS→PE4; keep the antenna away from metal. Expect real debugging time — don't let it block the build.</label></li>
+        <li class="step"><input type="checkbox" id="e2"><label class="step__txt" for="e2">125&nbsp;kHz RFID (optional/experimental): tuned LF antenna + analog front-end. Off-the-shelf modules rarely drop in cleanly — a fine "v2" goal.</label></li>
+      </ul>
+    </div>
+
+    <div class="stage">
+      <div class="stage__head"><span class="stage__badge">F</span><span class="stage__title">Power</span><span class="stage__meta">bench-proven first</span></div>
+      <ul class="steps">
+        <li class="step"><input type="checkbox" id="f1"><label class="step__txt" for="f1">Wire TP4056 between USB-C and the cell: B+/B− → cell, OUT+/OUT− → circuit. Use a protected cell or the TP4056+DW01 board.</label></li>
+        <li class="step"><input type="checkbox" id="f2"><label class="step__txt" for="f2"><strong>Check polarity with your multimeter before connecting the battery</strong> — a reversed Li-ion connection can destroy modules instantly.</label></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="flash">
+    <p class="snum">06 · Brain transplant</p>
+    <h2>Flashing the firmware</h2>
+    <div class="callout danger">
+      <div class="callout__icon">⚠️</div>
+      <div>
+        <p class="callout__title">Do not disconnect USB during any programming step</p>
+        <p>The <strong>OTP</strong> step writes One-Time-Programmable memory that <strong>cannot be rewritten</strong>. A mid-write disconnect can brick the board. Go slow, double-check every value.</p>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="stage__head"><span class="stage__badge">1</span><span class="stage__title">Generate the OTP file</span></div>
+      <ul class="steps">
+        <li class="step"><input type="checkbox" id="fl1"><label class="step__txt" for="fl1">Open the firmware's OTP utility (in the repo's <code>mics</code>/<code>misc</code> folder). Set <strong>Version 12 · Firmware 7 · Body 9 · Connection 6</strong>.</label></li>
+        <li class="step"><input type="checkbox" id="fl2"><label class="step__txt" for="fl2">Set display type (e.g. <code>mgg</code>), region (<code>us_ca_au</code>/<code>en_ru</code>/<code>jp</code>/<code>world</code>), device name (≤8 chars). Export the <code>.bin</code>.</label></li>
+      </ul>
+    </div>
+    <div class="stage">
+      <div class="stage__head"><span class="stage__badge">2</span><span class="stage__title">Write the OTP — once only</span></div>
+      <ul class="steps">
+        <li class="step"><input type="checkbox" id="fl3"><label class="step__txt" for="fl3">Bootloader mode (hold BOOT0 to ground, connect USB). Open STM32CubeProgrammer → USB → Connect.</label></li>
+        <li class="step"><input type="checkbox" id="fl4"><label class="step__txt" for="fl4">Load the OTP <code>.bin</code>, set start address <code>0x1FFF7000</code>, Start Programming, verify. Never write OTP again.</label></li>
+      </ul>
+    </div>
+    <div class="stage">
+      <div class="stage__head"><span class="stage__badge">3</span><span class="stage__title">Flash firmware + prep SD</span></div>
+      <ul class="steps">
+        <li class="step"><input type="checkbox" id="fl5"><label class="step__txt" for="fl5"><strong>Remove the microSD</strong>, open qFlipper → Install from file → select the <code>.dfu</code>. If not detected on Windows, fix the driver with Zadig (WinUSB) and retry.</label></li>
+        <li class="step"><input type="checkbox" id="fl6"><label class="step__txt" for="fl6">Watch for the dolphin boot 🐬. Format the SD <strong>FAT32</strong>, copy the firmware's databases/folders, reinsert, reboot.</label></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="test">
+    <p class="snum">07 · First boot</p>
+    <h2>Test each subsystem</h2>
+    <p>Test in build order, so a failure points at the last thing you added.</p>
+    <div class="stage">
+      <div class="stage__head"><span class="stage__badge">✓</span><span class="stage__title">Verification checklist</span></div>
+      <ul class="steps">
+        <li class="step"><input type="checkbox" id="t1"><label class="step__txt" for="t1">Screen + buttons: navigate menus cleanly (ghosting → revisit button wiring).</label></li>
+        <li class="step"><input type="checkbox" id="t2"><label class="step__txt" for="t2">SD card: firmware lists apps/databases (SD error → check CS PA10, MISO PB4, FAT32).</label></li>
+        <li class="step"><input type="checkbox" id="t3"><label class="step__txt" for="t3">Sub-GHz: <strong>Read</strong> at 433.92&nbsp;MHz near a 433 remote you own → signal means CC1101 lives.</label></li>
+        <li class="step"><input type="checkbox" id="t4"><label class="step__txt" for="t4">Infrared: <strong>Learn</strong> your TV remote, then replay it at the TV.</label></li>
+        <li class="step"><input type="checkbox" id="t5"><label class="step__txt" for="t5">iButton / speaker / LED: quick functional checks.</label></li>
+        <li class="step"><input type="checkbox" id="t6"><label class="step__txt" for="t6">NFC: read a tag you own (partial/no function is common in DIY — note and iterate).</label></li>
+      </ul>
+    </div>
+    <div class="callout good">
+      <div class="callout__icon">🔧</div>
+      <div>
+        <p class="callout__title">Dead subsystem? 90% of the time it's one of these</p>
+        <p>(a) swapped MISO/MOSI · (b) wrong or shorted CS pin · (c) a 3.3&nbsp;V module on 5&nbsp;V (or vice-versa) · (d) a cold solder joint. Multimeter + wiring log will find it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="blueprint">
+    <p class="snum">08 · Extra visuals</p>
+    <h2>Generate a wiring diagram on blueprint.am</h2>
+    <p><a href="https://blueprint.am">blueprint.am</a> turns a text description into a <strong>visual wiring diagram, BOM, and 3D layout</strong> — in the browser, no account needed for basic use. Paste the prompt below to get a diagram tailored to this build, then refine it on their canvas.</p>
+    <div class="prompt">
+      <div class="prompt__label">Paste into blueprint.am</div>
+      <button class="copy-btn" id="copyBtn" type="button">Copy</button>
+      <pre class="prompt__text" id="promptText">Design a DIY Flipper Zero-style handheld multi-tool built around a WeAct STM32WB55CGU6 development board. Show a clear, beginner-friendly wiring diagram and bill of materials.
+
+Shared SPI bus: SCK=PB3, MOSI=PB5, MISO=PB4.
+On the SPI bus, add these modules, each with its own chip-select:
+- CC1101 sub-GHz radio (CS=PA15, GDO0=PA1), powered at 3.3V, with antenna.
+- 128x64 SPI LCD, ST7565/ST756x controller (CS=PA3, plus DC/A0, RST, backlight).
+- microSD card module (CS=PA10).
+- ST25R3916 NFC module (CS=PE4).
+
+Single-pin peripherals:
+- IR receiver TSOP38238 (OUT to a GPIO).
+- IR transmit LED driven through a 2N2222 NPN transistor + resistor.
+- Passive piezo buzzer on PB8 (PWM).
+- iButton 1-Wire contact with pull-up.
+- 6 tactile buttons (Up/Down/Left/Right/OK/Back) read through an SN74HC165N shift register.
+
+Power: single 3.7V protected Li-ion cell charged by a TP4056 (USB-C) module.
+
+Everything runs at 3.3V logic. Please produce the wiring diagram, a BOM, and a 3D layout suggestion sized to fit in a 3D-printed pocket enclosure.</pre>
+    </div>
+    <div class="callout tip">
+      <div class="callout__icon">💡</div>
+      <div>
+        <p class="callout__title">Cross-check, don't trust blindly</p>
+        <p>AI-generated diagrams are a great <em>visual aid</em>, but always verify each pin against the firmware repo's own wiring diagrams before you solder — the firmware's map is the real source of truth.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="case">
+    <p class="snum">09 · You have a printer</p>
+    <h2>The 3D-printed case</h2>
+    <ul class="plain">
+      <li>Search Printables / Thingiverse / GrabCAD for "DIY Flipper Zero case", "FCFZ case", or check the firmware repos' own STL/STEP files.</li>
+      <li><strong>Measure your assembled stack</strong> — DIY module heights vary; verify internal dimensions before a long print.</li>
+      <li>PETG (tougher, pocket-friendly) or PLA (easy). ~0.2&nbsp;mm layers, 3+ walls, 20–30% infill.</li>
+      <li>Leave openings for USB-C, SD slot, IR window, antenna, GPIO header, button pad (0.2–0.4&nbsp;mm clearance).</li>
+      <li>No fit? Model a simple sandwich enclosure in Tinkercad (free) or FreeCAD — a great next CAD skill.</li>
+    </ul>
+  </section>
+
+  <section id="next">
+    <p class="snum">10 · Keep going</p>
+    <h2>Now you're into embedded systems</h2>
+    <ul class="plain">
+      <li><strong>Learn STM32 basics</strong> in STM32CubeIDE: blink an LED → read a button → talk to an I2C sensor. Makes the firmware stop feeling like magic.</li>
+      <li><strong>Read the real firmware</strong> (open source, GPL): browse <code>applications/</code>, <code>furi/</code> (its little OS) and <code>targets/</code>; the pin map lives in <code>furi_hal_resources.h</code>. Try building with <code>fbt</code> and writing a tiny <code>.fap</code> app.</li>
+      <li><strong>Easy second build:</strong> flash <a href="https://bruce.computer/">Bruce</a> onto a cheap ESP32 or an M5Stack Cardputer — different architecture, quick win, genuinely does more on WiFi.</li>
+      <li><strong>Get a ~$10 logic analyzer</strong> — <em>seeing</em> SPI/I2C traffic is a debugging superpower.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p style="font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:.6rem;">Sources</p>
+    <div class="links">
+      <a href="https://docs.flipper.net/zero/development/hardware/schematic">Official Flipper Zero schematics &amp; hardware docs</a>
+      <a href="https://github.com/GthiN89/FuckingCheapFlipperZero-DIY-Flipper-zero-The-real-on">FCFZ "the real one" — off-the-shelf modules, Momentum</a>
+      <a href="https://github.com/Magnowz/Flipper-Diy">Flipper-Diy — detailed wiring diagrams + flashing</a>
+      <a href="https://github.com/lamtranBKHN/diy_flipper_zero">STM32WB55 DIY firmware &amp; pin mapping (learning fork)</a>
+      <a href="https://www.hackster.io/zst123/fcfz-fully-compatible-flipper-zero-e686ba">FCFZ project write-up (Hackster)</a>
+      <a href="https://bruce.computer/">Bruce firmware (easy ESP32 second build)</a>
+    </div>
+    <p class="foot-note">Verify every pin against your firmware's own wiring diagrams before soldering. Only ever transmit to or test hardware you own or are authorized to test. Print a spare case. 🐬</p>
+  </footer>
+
+</main>
+
+<script>
+  (function () {
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('.step input[type=checkbox]'));
+    var fill = document.getElementById('fill');
+    var pct = document.getElementById('pct');
+    var KEY = 'flipper-build-progress-v1';
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { saved = {}; }
+
+    function update() {
+      var done = 0;
+      boxes.forEach(function (b) { if (b.checked) done++; });
+      var p = boxes.length ? Math.round(done / boxes.length * 100) : 0;
+      fill.style.width = p + '%';
+      pct.textContent = 'BUILD PROGRESS · ' + done + '/' + boxes.length + ' · ' + p + '%';
+    }
+    function persist() {
+      var state = {};
+      boxes.forEach(function (b) { state[b.id] = b.checked; });
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    }
+    boxes.forEach(function (b) {
+      if (saved[b.id]) b.checked = true;
+      b.addEventListener('change', function () { persist(); update(); });
+    });
+    update();
+
+    // theme toggle
+    var tKey = 'flipper-build-theme';
+    var tBtn = document.getElementById('themeToggle');
+    var root = document.documentElement;
+    try {
+      var t = localStorage.getItem(tKey);
+      if (t) root.setAttribute('data-theme', t);
+    } catch (e) {}
+    tBtn.addEventListener('click', function () {
+      var cur = root.getAttribute('data-theme');
+      if (!cur) {
+        cur = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      var next = cur === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem(tKey, next); } catch (e) {}
+    });
+
+    // copy prompt
+    var copyBtn = document.getElementById('copyBtn');
+    var promptText = document.getElementById('promptText');
+    copyBtn.addEventListener('click', function () {
+      var text = promptText.textContent;
+      function done() {
+        copyBtn.textContent = 'Copied ✓';
+        copyBtn.classList.add('done');
+        setTimeout(function () { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('done'); }, 1800);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () {
+          var r = document.createRange(); r.selectNode(promptText);
+          var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+          try { document.execCommand('copy'); done(); } catch (e) {} s.removeAllRanges();
+        });
+      } else {
+        var r = document.createRange(); r.selectNode(promptText);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        try { document.execCommand('copy'); done(); } catch (e) {} s.removeAllRanges();
+      }
+    });
+  })();
+</script>
