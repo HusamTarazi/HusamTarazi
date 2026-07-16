@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RECON-32 — ESP32 Handheld Security-Research Multitool Build Guide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --ground:#0E1420; --panel:#171F2E; --panel-2:#1E2838; --line:#2A3648;
+    --ink:#E7EDF6; --ink-dim:#9FB1C6; --ink-faint:#6C7E96;
+    --copper:#E0904B; --copper-bright:#F3AC63; --solder:#C7D1DC;
+    --teal:#57C7C0; --good:#5FC08C; --warn:#E4B23E; --crit:#E5595B;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px -18px rgba(0,0,0,.7);
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --wrap:960px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --ground:#EDF0F5; --panel:#FFFFFF; --panel-2:#F4F7FB; --line:#DBE1EB;
+      --ink:#16202E; --ink-dim:#455566; --ink-faint:#7386;
+      --copper:#B4671F; --copper-bright:#C9772F; --solder:#5C6B7D;
+      --teal:#1E8A83; --good:#2E9A63; --warn:#B9861B; --crit:#C93B3D;
+      --shadow:0 1px 0 rgba(255,255,255,.6), 0 14px 34px -22px rgba(20,40,70,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0E1420; --panel:#171F2E; --panel-2:#1E2838; --line:#2A3648;
+    --ink:#E7EDF6; --ink-dim:#9FB1C6; --ink-faint:#6C7E96;
+    --copper:#E0904B; --copper-bright:#F3AC63; --solder:#C7D1DC;
+    --teal:#57C7C0; --good:#5FC08C; --warn:#E4B23E; --crit:#E5595B;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px -18px rgba(0,0,0,.7);
+  }
+  :root[data-theme="light"]{
+    --ground:#EDF0F5; --panel:#FFFFFF; --panel-2:#F4F7FB; --line:#DBE1EB;
+    --ink:#16202E; --ink-dim:#455566; --ink-faint:#7386;
+    --copper:#B4671F; --copper-bright:#C9772F; --solder:#5C6B7D;
+    --teal:#1E8A83; --good:#2E9A63; --warn:#B9861B; --crit:#C93B3D;
+    --shadow:0 1px 0 rgba(255,255,255,.6), 0 14px 34px -22px rgba(20,40,70,.35);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+    line-height:1.62;font-size:16.5px;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+
+  a{color:var(--copper-bright);text-decoration:none}
+  a:hover{text-decoration:underline}
+  h1,h2,h3{text-wrap:balance;line-height:1.15;margin:0}
+  .wrap{max-width:var(--wrap);margin:0 auto;padding:0 22px}
+  .mono{font-family:var(--mono)}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--copper);font-weight:600}
+
+  header.bar{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--ground) 88%, transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar .wrap{display:flex;align-items:center;gap:18px;height:56px}
+  .brand{font-family:var(--mono);font-weight:700;letter-spacing:.04em;color:var(--ink);white-space:nowrap}
+  .brand b{color:var(--copper)}
+  nav.links{margin-left:auto;display:flex;gap:20px;font-family:var(--mono);font-size:12.5px;letter-spacing:.03em}
+  nav.links a{color:var(--ink-dim)}
+  nav.links a:hover,nav.links a.active{color:var(--copper);text-decoration:none}
+  @media(max-width:760px){nav.links{display:none}}
+
+  .hero{position:relative;padding:78px 0 54px;border-bottom:1px solid var(--line);overflow:hidden}
+  .hero canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.5}
+  .hero .wrap{position:relative}
+  .hero h1{font-family:var(--mono);font-size:clamp(34px,6.4vw,64px);font-weight:700;letter-spacing:-.01em;margin:14px 0 0}
+  .hero h1 .g{color:var(--copper)}
+  .hero .sub{font-size:clamp(17px,2.4vw,21px);color:var(--ink-dim);max-width:60ch;margin:20px 0 0}
+  .hero .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+  .chip{font-family:var(--mono);font-size:12px;letter-spacing:.04em;padding:6px 11px;border:1px solid var(--line);
+    border-radius:999px;color:var(--ink-dim);background:var(--panel)}
+  .chip b{color:var(--teal);font-weight:600}
+
+  section{padding:56px 0;border-bottom:1px solid var(--line)}
+  section h2{font-size:clamp(24px,3.6vw,34px);letter-spacing:-.01em}
+  section h2 .num{font-family:var(--mono);color:var(--copper);font-size:.62em;margin-right:.5em;font-weight:700}
+  section > .wrap > p.lead{color:var(--ink-dim);font-size:18px;max-width:66ch;margin:14px 0 0}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow)}
+  .grid{display:grid;gap:16px}
+  @media(min-width:720px){.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}}
+
+  .legal{background:linear-gradient(180deg,color-mix(in srgb,var(--crit) 12%,var(--panel)),var(--panel));
+    border:1px solid color-mix(in srgb,var(--crit) 45%,var(--line));border-radius:14px;padding:22px 24px;margin-top:26px}
+  .legal h3{color:var(--crit);font-family:var(--mono);font-size:14px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+  .legal p{margin:8px 0 0;color:var(--ink-dim)}
+  .legal strong{color:var(--ink)}
+
+  .path{position:relative}
+  .path .tag{position:absolute;top:-11px;left:20px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;padding:3px 10px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink-dim)}
+  .path.reco{border-color:color-mix(in srgb,var(--copper) 55%,var(--line))}
+  .path.reco .tag{color:var(--copper);border-color:color-mix(in srgb,var(--copper) 55%,var(--line))}
+  .path h3{margin:6px 0 4px;font-size:20px}
+  .path .price{font-family:var(--mono);color:var(--teal);font-size:14px;margin-bottom:12px}
+  .path ul{margin:0;padding-left:18px;color:var(--ink-dim)}
+  .path ul li{margin:5px 0}
+  .path ul li::marker{color:var(--copper)}
+
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin-top:22px}
+  table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.5px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{background:var(--panel-2);font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink-dim);font-weight:600;position:sticky;top:0}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:color-mix(in srgb,var(--copper) 6%,transparent)}
+  td .part{font-family:var(--mono);color:var(--ink)}
+  td.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;font-family:var(--mono);color:var(--teal)}
+  .cat{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--copper)}
+
+  .phase{display:grid;grid-template-columns:auto 1fr;gap:20px;padding:24px 0;border-bottom:1px solid var(--line)}
+  .phase:last-child{border-bottom:none}
+  .phase .no{font-family:var(--mono);font-weight:700;font-size:30px;color:var(--copper);
+    line-height:1;width:58px;height:58px;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .phase h3{font-size:19px;margin-bottom:6px}
+  .phase p{margin:0 0 8px;color:var(--ink-dim)}
+  .phase ul{margin:6px 0 0;padding-left:18px;color:var(--ink-dim)}
+  .phase ul li{margin:4px 0}
+  .phase ul li::marker{color:var(--copper)}
+
+  .mod{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .mod .h{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+  .mod .h .name{font-family:var(--mono);font-weight:700;color:var(--ink)}
+  .mod .h .freq{font-family:var(--mono);font-size:11px;color:var(--teal);margin-left:auto}
+  .mod p{margin:0;color:var(--ink-dim);font-size:14.5px}
+
+  .note{border-left:3px solid var(--copper);background:var(--panel);border-radius:0 10px 10px 0;padding:14px 18px;margin-top:18px;color:var(--ink-dim)}
+  .note.warn{border-left-color:var(--warn)}
+  .note.info{border-left-color:var(--teal)}
+  .note b{color:var(--ink)}
+  code{font-family:var(--mono);font-size:.9em;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:5px;padding:1px 6px;color:var(--copper-bright)}
+
+  .prompt{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:18px}
+  .prompt .top{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+  .prompt .top .dot{width:10px;height:10px;border-radius:50%;background:var(--copper)}
+  .prompt .top .t{font-family:var(--mono);font-size:12px;color:var(--ink-dim);letter-spacing:.05em}
+  .prompt button{margin-left:auto;font-family:var(--mono);font-size:12px;background:var(--copper);color:#20140a;
+    border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-weight:600}
+  .prompt button:hover{background:var(--copper-bright)}
+  .prompt pre{margin:0;padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--ink);
+    white-space:pre-wrap;max-height:340px;overflow:auto}
+
+  ul.plain{list-style:none;padding:0;margin:14px 0 0}
+  ul.plain li{padding:7px 0 7px 26px;position:relative;color:var(--ink-dim);border-bottom:1px solid var(--line)}
+  ul.plain li:last-child{border-bottom:none}
+  ul.plain li::before{content:"›";position:absolute;left:6px;color:var(--copper);font-family:var(--mono);font-weight:700}
+  ul.plain li b{color:var(--ink)}
+
+  footer{padding:44px 0 60px;color:var(--ink-faint);font-size:14px}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center}
+  footer a{color:var(--ink-dim)}
+  .kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:5px;padding:2px 6px;color:var(--ink-dim);background:var(--panel)}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <span class="brand"><b>RECON</b>-32</span>
+    <nav class="links">
+      <a href="#ethics">Ethics</a>
+      <a href="#paths">Builds</a>
+      <a href="#bom">BOM</a>
+      <a href="#assembly">Assembly</a>
+      <a href="#flash">Flash</a>
+      <a href="#print">Print</a>
+      <a href="#blueprint">Blueprint</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <span class="eyebrow">ESP32 · Bruce Firmware · Open-Source Security Lab</span>
+    <h1>Build the <span class="g">RECON-32</span><br>handheld security multitool</h1>
+    <p class="sub">A pocketable, 3D-printed ESP32 device running the open-source <b>Bruce</b> firmware — a hands-on lab for learning WiFi, Bluetooth, sub-GHz RF, NFC/RFID and IR on hardware <em>you own or are authorized to test</em>. Full bill of materials, wiring, flashing, and print files, start to finish.</p>
+    <div class="meta">
+      <span class="chip">Build time <b>3–6 hrs</b></span>
+      <span class="chip">From <b>~$28</b> to <b>~$140</b></span>
+      <span class="chip">Solder <b>optional → moderate</b></span>
+      <span class="chip"><b>3D-printed</b> case</span>
+    </div>
+  </div>
+</div>
+
+<section id="ethics">
+  <div class="wrap">
+    <span class="eyebrow">Read this first</span>
+    <h2>Legal &amp; ethical ground rules</h2>
+    <p class="lead">This is a learning and <strong>authorized-testing</strong> tool. The same radios that let you study a protocol can disrupt other people's devices, and that crosses from education into a crime. Treat the rules below as the real spec of the project.</p>
+
+    <div class="legal">
+      <h3>Only operate on targets you own or have written permission to test</h3>
+      <p><strong>Your own gear only.</strong> Your home WiFi, your own RFID fobs, your own remotes, a lab network you built. For anything else you need <strong>explicit written authorization</strong> (a signed scope, a CTF's rules, a lab you were invited into).</p>
+      <p><strong>Transmitting can be illegal.</strong> WiFi deauthentication, RF/Bluetooth jamming, and flooding are <strong>denial-of-service attacks</strong>. In the US the FCC prohibits signal jammers outright, and unauthorized access to networks violates the CFAA (and equivalents worldwide). Cloning someone else's access card or intercepting private traffic is a separate offense.</p>
+      <p><strong>Prefer receive-only learning.</strong> You can learn an enormous amount by <em>listening</em> — sniffing your own packets, reading your own tags, wardriving to see how 802.11 beacons work — without ever transmitting an attack. Start there.</p>
+      <p style="margin-top:12px;color:var(--ink-faint)">If a feature's only purpose is to degrade or intrude on a system you don't control, don't use it. This guide documents how to <em>build and understand</em> the device; how you operate it is on you.</p>
+    </div>
+  </div>
+</section>
+
+<section id="capabilities">
+  <div class="wrap">
+    <span class="eyebrow">The learning surface</span>
+    <h2>What each radio teaches you</h2>
+    <p class="lead">Bruce turns one small board into a survey of the wireless world. Each add-on module opens a band and a set of concepts. Everything here is standard, documented functionality from the <a href="https://github.com/pr3y/Bruce" target="_blank" rel="noopener">Bruce project</a>.</p>
+
+    <div class="grid g2" style="margin-top:24px">
+      <div class="mod"><div class="h"><span class="name">WiFi 2.4GHz</span><span class="freq">on-board ESP32</span></div>
+        <p>802.11 fundamentals: beacons, probe requests, channels, and handshakes. Scan networks, capture your own EAPOL handshake to study WPA2, stand up an "evil portal" captive page on your own lab AP, and log networks (wardriving) with a GPS module.</p></div>
+      <div class="mod"><div class="h"><span class="name">Bluetooth / BLE</span><span class="freq">on-board ESP32</span></div>
+        <p>How devices advertise and pair. Scan for BLE advertisements, inspect service UUIDs, and explore how beacons and spam frames work on the 2.4GHz band.</p></div>
+      <div class="mod"><div class="h"><span class="name">Sub-GHz RF</span><span class="freq">CC1101 · 315/433/868/915</span></div>
+        <p>OOK/ASK modulation on the ISM bands — the physics behind garage remotes, weather sensors, and doorbells. Read, save, and replay <em>your own</em> devices to understand rolling vs. fixed codes.</p></div>
+      <div class="mod"><div class="h"><span class="name">NFC / RFID</span><span class="freq">PN532 · 13.56 / 125kHz</span></div>
+        <p>How contactless tags identify themselves. Read UIDs, dump and study MIFARE Classic sectors on your own cards, and learn why some tag types are trivially cloneable and others aren't.</p></div>
+      <div class="mod"><div class="h"><span class="name">2.4GHz transceiver</span><span class="freq">NRF24L01+</span></div>
+        <p>Raw packet radio outside WiFi — channel hopping, addressing, and how cheap wireless peripherals talk. A great intro to software-defined-ish RF concepts.</p></div>
+      <div class="mod"><div class="h"><span class="name">Infrared</span><span class="freq">IR LED + TSOP receiver</span></div>
+        <p>Consumer-IR protocols (NEC, RC5). Capture a remote's codes and understand carrier frequency and encoding — the "universal remote" you build yourself.</p></div>
+    </div>
+    <div class="note info"><b>Optional extras:</b> a GPS module (ATGM336H / NEO-6M) enables map-logging of WiFi surveys; a microSD card stores captures and logs; a 125kHz reader adds low-frequency RFID study.</div>
+  </div>
+</section>
+
+<section id="paths">
+  <div class="wrap">
+    <span class="eyebrow">Pick your hardware</span>
+    <h2><span class="num">01</span>Choose a build path</h2>
+    <p class="lead">Two routes to the same firmware. Path A is the fastest way to a fully-featured device with barely any soldering. Path B is the "build it yourself from modules" route — cheaper per part, maximum to learn, more assembly.</p>
+
+    <div class="grid g2" style="margin-top:26px">
+      <div class="card path reco">
+        <span class="tag">Recommended · least soldering</span>
+        <h3>Path A — LilyGo T-Embed CC1101</h3>
+        <div class="price mono">~$45–65 · 1–2 hrs</div>
+        <p style="color:var(--ink-dim);margin:0 0 12px">An all-in-one board that already has the screen, battery, rotary encoder, IR, and a <b>built-in CC1101</b> sub-GHz radio. Bruce supports it directly. You mostly print a case and flash.</p>
+        <ul>
+          <li>Screen + LiPo + encoder + IR already on board</li>
+          <li>Sub-GHz works out of the box (no wiring)</li>
+          <li>Add PN532 (NFC) &amp; NRF24 via the Grove/QWIIC-style header</li>
+          <li>Excellent 3D-printed case ecosystem (see Print section)</li>
+        </ul>
+      </div>
+      <div class="card path">
+        <span class="tag">Most modular · most to learn</span>
+        <h3>Path B — ESP32-S3 + module stack</h3>
+        <div class="price mono">~$28–90 · 3–6 hrs</div>
+        <p style="color:var(--ink-dim);margin:0 0 12px">Start from a bare ESP32-S3 board (or the "Cheap Yellow Display" CYD) and wire each radio yourself. You learn the SPI/I2C bus, power, and pin mapping — and can pick exactly which capabilities to include.</p>
+        <ul>
+          <li>Cheapest entry (a CYD is ~$12–18)</li>
+          <li>Choose your own modules &amp; antennas</li>
+          <li>Real soldering + wiring practice</li>
+          <li>Fully custom 3D-printed enclosure</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note"><b>Not sure?</b> If you want it working tonight, buy the <b>T-Embed CC1101</b> (Path A). If the <em>building</em> is the point and you want to understand every wire, do <b>Path B</b>. The rest of this guide covers both; Path B has the extra wiring steps.</div>
+  </div>
+</section>
+
+<section id="bom">
+  <div class="wrap">
+    <span class="eyebrow">Bill of materials</span>
+    <h2><span class="num">02</span>Parts &amp; where to get them</h2>
+    <p class="lead">Prices are rough 2026 street prices in USD and vary a lot by seller. <b>AliExpress</b> is cheapest (2–4 wk shipping); <b>Amazon</b> is fastest; <b>Mouser/DigiKey</b> for guaranteed-genuine chips. Buy from the official <b>LilyGo</b> and <b>M5Stack</b> stores for their boards.</p>
+
+    <h3 class="mono" style="margin:28px 0 4px;color:var(--copper)">Core — pick ONE</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Part</th><th>Purpose</th><th>Qty</th><th class="num">~$</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td><span class="part">LilyGo T-Embed CC1101</span><div class="cat">PATH A core</div></td><td>All-in-one: screen, LiPo, encoder, IR, built-in sub-GHz</td><td>1</td><td class="num">45–65</td><td>LilyGo store, AliExpress</td></tr>
+          <tr><td><span class="part">ESP32-2432S028R "CYD"</span><div class="cat">PATH B core (budget)</div></td><td>2.8" touch TFT + ESP32, tons of exposed GPIO</td><td>1</td><td class="num">12–18</td><td>AliExpress, Amazon</td></tr>
+          <tr><td><span class="part">ESP32-S3 DevKit N16R8</span><div class="cat">PATH B core (roomy)</div></td><td>16MB flash / 8MB PSRAM, USB-C, add your own screen</td><td>1</td><td class="num">9–15</td><td>AliExpress, Mouser</td></tr>
+          <tr><td><span class="part">1.9"/2.8" SPI TFT (ST7789/ILI9341)</span><div class="cat">PATH B if bare board</div></td><td>Display for the S3 devkit route</td><td>1</td><td class="num">6–12</td><td>AliExpress</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="mono" style="margin:28px 0 4px;color:var(--copper)">Radio modules — add what you want to learn</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Part</th><th>Adds</th><th>Qty</th><th class="num">~$</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td><span class="part">CC1101 module</span><div class="cat">sub-GHz</div></td><td>315/433/868/915 MHz RF (skip if T-Embed CC1101)</td><td>1</td><td class="num">2–5</td><td>AliExpress</td></tr>
+          <tr><td><span class="part">PN532 NFC module</span><div class="cat">13.56 MHz</div></td><td>NFC/RFID read + MIFARE study (set to I2C)</td><td>1</td><td class="num">4–8</td><td>AliExpress, Amazon</td></tr>
+          <tr><td><span class="part">NRF24L01+ (PA/LNA)</span><div class="cat">2.4 GHz</div></td><td>Raw 2.4GHz packet radio + antenna</td><td>1</td><td class="num">2–4</td><td>AliExpress</td></tr>
+          <tr><td><span class="part">IR LED + TSOP38238 + NPN transistor</span><div class="cat">infrared</div></td><td>IR transmit + receive (skip if T-Embed)</td><td>1 set</td><td class="num">2–4</td><td>AliExpress, local</td></tr>
+          <tr><td><span class="part">ATGM336H or NEO-6M GPS</span><div class="cat">optional · GNSS</div></td><td>Location logging for WiFi surveys (UART)</td><td>1</td><td class="num">5–10</td><td>AliExpress</td></tr>
+          <tr><td><span class="part">433MHz + 2.4GHz antennas</span><div class="cat">RF</div></td><td>Spring/SMA whips for CC1101 &amp; NRF24</td><td>2</td><td class="num">2–6</td><td>AliExpress</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="mono" style="margin:28px 0 4px;color:var(--copper)">Power, storage &amp; hardware</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Part</th><th>Purpose</th><th>Qty</th><th class="num">~$</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td><span class="part">LiPo 3.7V 1000–2000mAh</span> <span class="mono" style="color:var(--ink-faint)">or 18650 + holder</span></td><td>Battery (T-Embed includes one)</td><td>1</td><td class="num">4–9</td><td>AliExpress, local</td></tr>
+          <tr><td><span class="part">TP4056 USB-C charger (protected)</span></td><td>Safe Li-ion charging (if board lacks it)</td><td>1</td><td class="num">1–3</td><td>AliExpress</td></tr>
+          <tr><td><span class="part">Slide power switch (SPDT)</span></td><td>Cut battery drain when off</td><td>1</td><td class="num">1</td><td>AliExpress, local</td></tr>
+          <tr><td><span class="part">microSD card 8–32GB + module</span></td><td>Save captures &amp; logs (module only if not on board)</td><td>1</td><td class="num">4–8</td><td>anywhere</td></tr>
+          <tr><td><span class="part">Dupont wires + JST + heat-shrink</span></td><td>Wiring &amp; strain relief</td><td>1 kit</td><td class="num">4–7</td><td>AliExpress</td></tr>
+          <tr><td><span class="part">Perfboard or custom PCB</span></td><td>Mount modules cleanly (Path B)</td><td>1</td><td class="num">2–5</td><td>AliExpress</td></tr>
+          <tr><td><span class="part">M2/M3 heat-set inserts + screws</span></td><td>Fasten the 3D-printed case</td><td>1 kit</td><td class="num">5–9</td><td>AliExpress, Amazon</td></tr>
+          <tr><td><span class="part">6×3mm neodymium magnets</span></td><td>Snap-close case backs (many STLs use these)</td><td>6–12</td><td class="num">3–5</td><td>AliExpress</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note info"><b>Tools you already have:</b> soldering iron + solder, flush cutters, tweezers, a multimeter, and a 3D printer. A helping-hands / PCB vise and some flux make the module wiring much easier. A machine-readable <code>bom.csv</code> is in the <code>esp32-recon-multitool/</code> folder for importing into a spreadsheet or cart.</div>
+  </div>
+</section>
+
+<section id="assembly">
+  <div class="wrap">
+    <span class="eyebrow">Standard operating procedure</span>
+    <h2><span class="num">03</span>Assembly, step by step</h2>
+    <p class="lead">Do it in this order. Verify each stage before moving on — it's far easier to debug one module than six at once. <b>Path A</b> people can skim phases 2–4 (your radios are on-board) and focus on the header add-ons and the case.</p>
+
+    <div class="phase">
+      <div class="no">1</div>
+      <div>
+        <h3>Bench-test the bare board first</h3>
+        <p>Before any soldering, plug the core board into USB and confirm it enumerates on your computer. This proves the board and your cable are good — a shocking number of "dead boards" are just charge-only USB cables.</p>
+        <ul>
+          <li>Use a <b>USB-C data cable</b>, not a charge-only one.</li>
+          <li>Confirm a COM/serial port appears (Device Manager / <code>ls /dev/tty*</code>).</li>
+          <li>Flash Bruce now (jump to the Flash section) so you have a known-good baseline before adding hardware.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="no">2</div>
+      <div>
+        <h3>Plan the bus &amp; pin map</h3>
+        <p>The radios share one <b>SPI bus</b> (CC1101, NRF24, display, SD) — each gets its own <b>CS</b> (chip-select) line. NFC (PN532) runs on <b>I2C</b>. GPS uses a <b>UART</b>. Write your pin map down now; you'll type it into Bruce's config later.</p>
+        <div class="tablewrap" style="margin-top:12px">
+          <table>
+            <thead><tr><th>Signal</th><th>Bus</th><th>Example GPIO*</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td class="part">SCK / MOSI / MISO</td><td>SPI (shared)</td><td class="mono">12 / 11 / 13</td><td>One bus, all SPI modules</td></tr>
+              <tr><td class="part">CC1101 CS / GDO0</td><td>SPI</td><td class="mono">10 / 9</td><td>Sub-GHz select + data</td></tr>
+              <tr><td class="part">NRF24 CE / CSN</td><td>SPI</td><td class="mono">4 / 5</td><td>2.4GHz transceiver</td></tr>
+              <tr><td class="part">SD CS</td><td>SPI</td><td class="mono">21</td><td>Log storage</td></tr>
+              <tr><td class="part">PN532 SDA / SCL</td><td>I2C</td><td class="mono">8 / 18</td><td>Set PN532 DIP to I2C</td></tr>
+              <tr><td class="part">IR TX / RX</td><td>GPIO</td><td class="mono">44 / 43</td><td>LED via transistor; TSOP receiver</td></tr>
+              <tr><td class="part">GPS TX / RX</td><td>UART</td><td class="mono">17 / 16</td><td>Cross RX-TX</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note warn"><b>*Example pins only.</b> The exact free GPIOs depend on your board (CYD, S3 devkit, T-Embed all differ). Pick pins that aren't already used by the screen/PSRAM, then set them in <b>Bruce → Config → Pins / RF Config</b>. There is no single "correct" map — Bruce lets you assign them.</div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="no">3</div>
+      <div>
+        <h3>Solder the SPI radios (CC1101 + NRF24)</h3>
+        <p>Mount both modules on a small perfboard "hat," tie their SCK/MOSI/MISO to the shared bus, and run separate CS lines. Power CC1101 from <b>3.3V</b> (never 5V). The NRF24 is noise-sensitive — solder a <b>10–100µF cap across its VCC/GND</b> right at the module to stop brownouts.</p>
+        <ul>
+          <li>Keep RF wires short; twist power pairs.</li>
+          <li>Attach the 433MHz and 2.4GHz antennas before powering up — transmitting without an antenna can damage the RF stage.</li>
+          <li>Test: boot Bruce, open the sub-GHz menu, and confirm the CC1101 is detected (no "module not found").</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="no">4</div>
+      <div>
+        <h3>Wire NFC (I2C) and IR</h3>
+        <p>Set the PN532's onboard DIP switches to <b>I2C</b> mode, then connect SDA/SCL/3V3/GND. For IR, drive the IR LED through an NPN transistor (the GPIO can't source enough current alone) and wire the TSOP receiver's data pin to your IR-RX GPIO.</p>
+        <ul>
+          <li>I2C needs pull-ups — most PN532 boards include them.</li>
+          <li>Verify NFC by reading your own transit/hotel card's UID.</li>
+          <li>Verify IR by capturing a button from your TV remote.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="no">5</div>
+      <div>
+        <h3>Power: battery, charging &amp; switch</h3>
+        <p>If your board doesn't have charging built in (the T-Embed does), wire the LiPo through a <b>TP4056 protected charger</b> and put an <b>SPDT slide switch</b> on the battery's positive line so the device fully powers down. This solves the "battery flat in 2 days" complaint on some boards.</p>
+        <ul>
+          <li>Observe polarity — reversed LiPo will destroy the board.</li>
+          <li>Insulate the cell with Kapton tape; never let solder joints touch the pouch.</li>
+          <li>Charge the first time on a fireproof surface and watch it.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="no">6</div>
+      <div>
+        <h3>Dry-fit, then close the case</h3>
+        <p>Test-fit everything in the printed shell <em>before</em> final assembly. Set your <b>heat-set inserts</b> with the soldering iron (low temp, press straight down), route antennas to their SMA holes, seat the magnets, and screw it together.</p>
+        <ul>
+          <li>Add foam/Kapton so nothing shorts against the battery.</li>
+          <li>Leave the USB-C port and SD slot accessible.</li>
+          <li>Do a final full-feature boot test before you seal it.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="flash">
+  <div class="wrap">
+    <span class="eyebrow">Firmware</span>
+    <h2><span class="num">04</span>Flash the Bruce firmware</h2>
+    <p class="lead">Bruce installs straight from the browser — no toolchain to set up. Use <b>desktop Chrome or Edge</b> (they support Web Serial); Firefox and Safari won't work for the flasher.</p>
+
+    <ul class="plain">
+      <li><b>1 · Open the web flasher.</b> Go to <a href="https://bruce.computer/flasher" target="_blank" rel="noopener">bruce.computer/flasher</a> (the official installer). Keep the <a href="https://github.com/pr3y/Bruce" target="_blank" rel="noopener">GitHub repo</a> and <a href="https://wiki.bruce.computer/" target="_blank" rel="noopener">wiki</a> open for reference.</li>
+      <li><b>2 · Connect over USB-C.</b> Plug in the board with a data cable. Click <b>Connect</b> and pick the serial port. If nothing shows, install the CP210x / CH340 USB-serial driver for your board.</li>
+      <li><b>3 · Enter bootloader if needed.</b> Most boards auto-enter. If flashing fails, hold <b>BOOT</b>, tap <b>RST/EN</b>, then release BOOT to force download mode.</li>
+      <li><b>4 · Select your exact device.</b> Choose your model (T-Embed CC1101, CYD-2432S028, generic ESP32-S3). Picking the right target sets the correct display &amp; pin defaults.</li>
+      <li><b>5 · Install &amp; wait.</b> Click Install/Flash. It erases and writes in 1–3 minutes. Don't unplug mid-flash.</li>
+      <li><b>6 · Reboot &amp; configure.</b> On first boot, open <b>Config</b> and set your <b>pin map</b> and <b>RF Config</b> (rfTx/rfRx, CS lines) to match your wiring from Phase 2. Set the RTC/clock and brightness while you're there.</li>
+      <li><b>7 · Verify each module.</b> Walk the menus: WiFi scan, BLE scan, sub-GHz (CC1101 detected), NFC read your own card, IR capture a remote. Green across the board = you're done.</li>
+    </ul>
+    <div class="note info"><b>Updating later:</b> re-run the web flasher any time to get new Bruce releases, or download the <code>.bin</code> from GitHub Releases and flash with <code>esptool</code>. Your config is stored on-device.</div>
+  </div>
+</section>
+
+<section id="print">
+  <div class="wrap">
+    <span class="eyebrow">3D printing</span>
+    <h2><span class="num">05</span>Print the enclosure</h2>
+    <p class="lead">You've got a printer — use it. There's a mature ecosystem of case STLs, especially for the T-Embed CC1101. Print the shell, add heat-set inserts, and you've got a rugged handheld.</p>
+
+    <div class="grid g2" style="margin-top:22px">
+      <div class="card">
+        <h3 class="mono" style="color:var(--copper);font-size:16px;margin-bottom:8px">Where to get STLs</h3>
+        <ul class="plain" style="margin-top:0">
+          <li><b>Printables</b> — search "<a href="https://www.printables.com/search/models?q=t-embed%20cc1101" target="_blank" rel="noopener">T-Embed CC1101</a>". Excellent shells with external-antenna holes, power-switch mods, and GPS-module room.</li>
+          <li><b>Thingiverse / Yeggi</b> — search "ESP32 CYD case" or "Bruce ESP32" for the CYD and devkit routes.</li>
+          <li><b>Design your own</b> — the boards are simple rectangles; a parametric case in Tinkercad/Fusion/OpenSCAD is very doable.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 class="mono" style="color:var(--copper);font-size:16px;margin-bottom:8px">Recommended print settings</h3>
+        <ul class="plain" style="margin-top:0">
+          <li><b>Material:</b> PETG (heat + drop resistant) or PLA+ for easy printing.</li>
+          <li><b>Layer height:</b> 0.2mm · <b>Walls:</b> 3 perimeters · <b>Infill:</b> 20–30%.</li>
+          <li><b>Supports:</b> only on port cutouts / overhangs; use tree supports.</li>
+          <li><b>Flexible bits</b> (buttons, antenna grommets): TPU 95A.</li>
+          <li><b>Inserts:</b> heat-set M2/M3 with the soldering iron at ~200°C.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note"><b>Pro tip:</b> print the case <em>after</em> you've dry-fit your electronics on the bench, so you can confirm the STL matches your exact board revision and module stack before committing filament.</div>
+  </div>
+</section>
+
+<section id="blueprint">
+  <div class="wrap">
+    <span class="eyebrow">Bonus</span>
+    <h2><span class="num">06</span>Make it yours in Blueprint / Lovable</h2>
+    <p class="lead">Want a fancier, interactive version of this guide as a hosted web app — with checkboxes, a live BOM cost calculator, and your own branding? Paste the prompt below into <a href="https://blueprint.tech" target="_blank" rel="noopener">Blueprint</a>, <a href="https://lovable.dev" target="_blank" rel="noopener">Lovable</a>, or any AI site builder.</p>
+
+    <div class="prompt">
+      <div class="top"><span class="dot"></span><span class="t">paste-into-blueprint.txt</span><button id="copyBtn" type="button">Copy</button></div>
+      <pre id="promptText">Build a single-page, mobile-friendly web app called "RECON-32 Build Companion" — an interactive build guide for a DIY ESP32 handheld security-RESEARCH multitool running open-source Bruce firmware. This is an educational / authorized-testing project.
+
+Requirements:
+1. Sticky top nav linking to: Ethics, Build Paths, BOM, Assembly, Flashing, 3D Printing, Resources.
+2. A prominent Legal &amp; Ethics banner at the very top: "Only operate on hardware and networks you own or are explicitly authorized to test." Make it visually distinct (warning style).
+3. "Choose your build" section comparing two cards: Path A = LilyGo T-Embed CC1101 (all-in-one, least soldering); Path B = ESP32-S3 / Cheap-Yellow-Display + modules (most modular).
+4. An INTERACTIVE Bill of Materials table with columns: Part, Purpose, Qty, Unit price, Where to buy. Add a quantity input per row and a live running TOTAL cost at the bottom. Group rows: Core, Radio modules, Power/hardware.
+5. A step-by-step Assembly section with 6 numbered phases, each with a checkbox so the user can track progress; persist checkbox state in localStorage.
+6. A Flashing section listing the 7 browser-flasher steps (bruce.computer/flasher, Chrome/Edge, connect over USB-C, bootloader, pick device, install, verify).
+7. A 3D-Printing section with recommended STL sources (Printables T-Embed CC1101) and print settings (PETG, 0.2mm, 20-30% infill, heat-set inserts).
+8. A Resources section linking Bruce GitHub + wiki and general wireless-security learning.
+
+Design: dark "hardware hacker" aesthetic but NOT neon-green cliche — use a deep blue-slate background with a warm copper/amber accent and a monospace display font for headings. Clean, technical, professional. Fully responsive. Support light + dark mode.</pre>
+    </div>
+    <div class="note info">This guide's own HTML file is already a finished version you can host as-is (GitHub Pages, Netlify, or just open the file). The prompt above is for when you want the interactive, app-like upgrade.</div>
+  </div>
+</section>
+
+<section id="resources">
+  <div class="wrap">
+    <span class="eyebrow">Keep learning</span>
+    <h2>Resources &amp; responsible next steps</h2>
+    <div class="grid g2" style="margin-top:20px">
+      <div class="card">
+        <h3 class="mono" style="color:var(--copper);font-size:15px;margin-bottom:6px">The firmware &amp; hardware</h3>
+        <ul class="plain" style="margin-top:0">
+          <li><a href="https://github.com/pr3y/Bruce" target="_blank" rel="noopener">Bruce firmware — GitHub</a></li>
+          <li><a href="https://wiki.bruce.computer/" target="_blank" rel="noopener">Bruce wiki (setup, modules, pins)</a></li>
+          <li><a href="https://bruce.computer/flasher" target="_blank" rel="noopener">Official web flasher</a></li>
+          <li><a href="https://github.com/justcallmekoko/ESP32Marauder" target="_blank" rel="noopener">ESP32 Marauder (alternative WiFi firmware)</a></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 class="mono" style="color:var(--copper);font-size:15px;margin-bottom:6px">Learn the fundamentals (legally)</h3>
+        <ul class="plain" style="margin-top:0">
+          <li>802.11 / WiFi security basics — how WPA2 handshakes actually work</li>
+          <li>Hands-on labs: TryHackMe, Hack The Box, and CTF events (authorized by design)</li>
+          <li>RTL-SDR for receive-only RF exploration (listen before you transmit)</li>
+          <li>Your own home lab: a spare router + your own devices = unlimited practice</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="mono" style="color:var(--copper)">RECON-32</span>
+    <span>Open build guide for an ESP32 security-research multitool.</span>
+    <span style="margin-left:auto">Use it on your own gear. Learn something. <span class="kbd">be ethical</span></span>
+  </div>
+</footer>
+
+<script>
+  const ids=[...document.querySelectorAll('section[id]')];
+  const links=new Map([...document.querySelectorAll('nav.links a')].map(a=>[a.getAttribute('href').slice(1),a]));
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{const l=links.get(e.target.id);
+    if(l&&e.isIntersecting){links.forEach(x=>x.classList.remove('active'));l.classList.add('active');}});},
+    {rootMargin:'-45% 0px -50% 0px'});
+  ids.forEach(s=>io.observe(s));
+
+  const btn=document.getElementById('copyBtn');
+  btn&&btn.addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText(document.getElementById('promptText').innerText);
+      btn.textContent='Copied';setTimeout(()=>btn.textContent='Copy',1600);}
+    catch(e){btn.textContent='Select & copy';}
+  });
+
+  const c=document.getElementById('fx');
+  if(c && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const x=c.getContext('2d');let W,H,pts;
+    const css=getComputedStyle(document.documentElement);
+    function col(){return css.getPropertyValue('--copper').trim()||'#E0904B';}
+    function resize(){const r=c.getBoundingClientRect();W=c.width=r.width*devicePixelRatio;H=c.height=r.height*devicePixelRatio;
+      const n=Math.max(14,Math.floor(r.width/70));pts=[...Array(n)].map(()=>({x:Math.random()*W,y:Math.random()*H,
+        vx:(Math.random()-.5)*.18*devicePixelRatio,vy:(Math.random()-.5)*.18*devicePixelRatio}));}
+    resize();addEventListener('resize',resize);
+    (function loop(){x.clearRect(0,0,W,H);const cc=col();
+      for(const p of pts){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;}
+      for(let i=0;i<pts.length;i++){for(let j=i+1;j<pts.length;j++){
+        const a=pts[i],b=pts[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy);
+        if(d<150*devicePixelRatio){x.globalAlpha=(1-d/(150*devicePixelRatio))*.5;x.strokeStyle=cc;x.lineWidth=devicePixelRatio;
+          x.beginPath();x.moveTo(a.x,a.y);
+          x.lineTo(b.x,a.y);x.lineTo(b.x,b.y);x.stroke();}}}
+      x.globalAlpha=.9;x.fillStyle=cc;
+      for(const p of pts){x.beginPath();x.arc(p.x,p.y,1.7*devicePixelRatio,0,7);x.fill();}
+      requestAnimationFrame(loop);})();
+  }
+</script>
+</body>
+</html>

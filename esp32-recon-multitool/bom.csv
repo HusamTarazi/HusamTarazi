@@ -1,0 +1,19 @@
+Category,Part,Purpose,Qty,Unit price USD (approx),Where to buy
+Core (Path A),LilyGo T-Embed CC1101,All-in-one: screen + LiPo + encoder + IR + built-in sub-GHz,1,45-65,LilyGo store / AliExpress
+Core (Path B budget),ESP32-2432S028R (CYD),2.8-inch touch TFT + ESP32 with exposed GPIO,1,12-18,AliExpress / Amazon
+Core (Path B roomy),ESP32-S3 DevKit N16R8,16MB flash / 8MB PSRAM USB-C add your own screen,1,9-15,AliExpress / Mouser
+Core (Path B display),1.9/2.8-inch SPI TFT (ST7789/ILI9341),Display for the bare S3 devkit route,1,6-12,AliExpress
+Radio,CC1101 module,315/433/868/915 MHz sub-GHz RF (skip if T-Embed CC1101),1,2-5,AliExpress
+Radio,PN532 NFC module,13.56 MHz NFC/RFID read + MIFARE study (set to I2C),1,4-8,AliExpress / Amazon
+Radio,NRF24L01+ (PA/LNA),Raw 2.4GHz packet radio + antenna,1,2-4,AliExpress
+Radio,IR LED + TSOP38238 + NPN transistor,IR transmit + receive (skip if T-Embed),1,2-4,AliExpress / local
+Radio (optional),ATGM336H or NEO-6M GPS,Location logging for WiFi surveys (UART),1,5-10,AliExpress
+Radio,433MHz + 2.4GHz antennas,Spring/SMA whips for CC1101 and NRF24,2,2-6,AliExpress
+Power,LiPo 3.7V 1000-2000mAh or 18650 + holder,Battery (T-Embed includes one),1,4-9,AliExpress / local
+Power,TP4056 USB-C charger (protected),Safe Li-ion charging if board lacks it,1,1-3,AliExpress
+Power,Slide power switch (SPDT),Cut battery drain when off,1,1,AliExpress / local
+Storage,microSD card 8-32GB + module,Save captures and logs (module only if not on board),1,4-8,anywhere
+Hardware,Dupont wires + JST + heat-shrink,Wiring and strain relief,1,4-7,AliExpress
+Hardware,Perfboard or custom PCB,Mount modules cleanly (Path B),1,2-5,AliExpress
+Hardware,M2/M3 heat-set inserts + screws,Fasten the 3D-printed case,1,5-9,AliExpress / Amazon
+Hardware,6x3mm neodymium magnets,Snap-close case backs,8,3-5,AliExpress
